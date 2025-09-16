@@ -1,0 +1,32 @@
+<div class="free-mode-container">
+  <header class="free-mode-header">
+    <div class="banner">
+      <h1 class="free-mode-title">Modo Libre</h1>
+      <nav class="free-mode-tabs">
+        <button
+          class="tab-btn"
+          [class.active]="activeTab === 'blockly'"
+          (click)="activeTab = 'blockly'"
+        >
+          Lógica Blockly
+        </button>
+        <button
+          class="tab-btn"
+          [class.active]="activeTab === 'deduccion'"
+          (click)="activeTab = 'deduccion'"
+        >
+          Deducción Natural
+        </button>
+      </nav>
+      <button class="back-btn" (click)="goHome()">Volver al inicio</button>
+    </div>
+  </header>
+  <main class="free-mode-main">
+    <ng-container *ngIf="activeTab === 'blockly'">
+      <app-blockly-workspace></app-blockly-workspace>
+    </ng-container>
+    <ng-container *ngIf="activeTab === 'deduccion'">
+      <app-natural-deduction></app-natural-deduction>
+    </ng-container>
+  </main>
+</div>

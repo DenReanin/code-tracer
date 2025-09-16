@@ -1,0 +1,197 @@
+<div class="logic-workspace-advanced">
+  <!-- Panel de ejercicio (solo visible en modo ejercicio) -->
+  <div class="exercise-panel" *ngIf="isExerciseMode && currentExercise">
+    <div class="exercise-info">
+      <h3>{{ currentExercise.title }}</h3>
+      <p><strong>Objetivo:</strong> {{ currentExercise.objective }}</p>
+    </div>
+    <div class="exercise-actions">
+      <button
+        class="hint-btn"
+        (click)="showInstructionsModal()"
+        *ngIf="currentExercise.instructions"
+      >
+        📋 Pasos
+      </button>
+      <button
+        class="hint-btn"
+        (click)="showHint()"
+        *ngIf="currentExercise.hint"
+      >
+        💡 Pista
+      </button>
+      <button class="back-btn" (click)="goBackToExercises()">
+        ← Volver a ejercicios
+      </button>
+    </div>
+  </div>
+
+  <div class="logic-columns">
+    <!-- Columna izquierda: Tabla de verdad -->
+    <aside class="truth-table-panel">
+      <h3>Tabla de Verdad</h3>
+      <ng-container *ngIf="formula; else noBlocks">
+        <button
+          (click)="evaluateFormula()"
+          class="action-button"
+          [disabled]="!formula"
+          style="margin-bottom: 1rem; width: 100%"
+        >
+          Generar
+        </button>
+        <ng-container *ngIf="formulaEvaluated && truthTable.length > 0">
+          <table class="truth-table">
+            <thead>
+              <tr>
+                <th *ngFor="let variable of variables">{{ variable }}</th>
+                <th class="result-column">{{ formula }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let entry of truthTable">
+                <td *ngFor="let variable of variables" class="value-cell">
+                  {{ entry.assignment[variable] ? "V" : "F" }}
+                </td>
+                <td
+                  class="result-cell"
+                  [class.true-value]="entry.result"
+                  [class.false-value]="!entry.result"
+                >
+                  {{ entry.result ? "V" : "F" }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </ng-container>
+        <ng-container *ngIf="!formulaEvaluated || truthTable.length === 0">
+          <div class="truth-table-placeholder">
+            Genera la tabla para ver los resultados.
+          </div>
+        </ng-container>
+      </ng-container>
+      <ng-template #noBlocks>
+        <div class="truth-table-placeholder">
+          Añade bloques para construir una fórmula lógica.
+        </div>
+      </ng-template>
+    </aside>
+
+    <!-- Columna central: Blockly -->
+    <section class="blockly-panel">
+      <div #blocklyDiv class="blockly-workspace"></div>
+    </section>
+
+    <!-- Columna derecha: Árbol sintáctico -->
+    <aside class="syntax-tree-panel">
+      <h3>Árbol sintáctico</h3>
+      <ng-container *ngIf="currentTopBlock">
+        <div class="syntax-tree-container-wrapper">
+          <app-syntax-tree-visualizer
+            [block]="currentTopBlock"
+          ></app-syntax-tree-visualizer>
+
+          <!-- Botón de pantalla completa -->
+          <button
+            class="fullscreen-btn"
+            (click)="openTreeFullscreen()"
+            title="Ver árbol en pantalla completa"
+          >
+            ⛶
+          </button>
+        </div>
+      </ng-container>
+      <ng-container *ngIf="!currentTopBlock">
+        <div class="syntax-tree-placeholder">
+          Añade bloques para ver el árbol sintáctico.
+        </div>
+      </ng-container>
+    </aside>
+  </div>
+
+  <!-- Footer: Fórmula y variables -->
+  <footer class="logic-footer">
+    <div class="footer-block formula-footer">
+      <strong>Fórmula lógica:</strong>
+      <span class="formula">{{ formula || "No hay fórmula construida" }}</span>
+    </div>
+    <div class="footer-block variables-footer" *ngIf="variables.length > 0">
+      <strong>Variables:</strong>
+      <span *ngFor="let variable of variables" class="variable-chip">{{
+        variable
+      }}</span>
+    </div>
+  </footer>
+</div>
+
+<!-- Botón de ayuda flotante -->
+<div class="help-fab" tabindex="0" aria-label="Ayuda" (click)="showHelp = true">
+  <span>❔</span>
+</div>
+
+<!-- Modal de ayuda -->
+<div class="help-modal" *ngIf="showHelp" (click)="showHelp = false">
+  <div class="help-modal-content" (click)="$event.stopPropagation()">
+    <button
+      class="close-btn"
+      (click)="showHelp = false"
+      aria-label="Cerrar ayuda"
+    >
+      &times;
+    </button>
+    <h2>Ayuda rápida</h2>
+    <ul>
+      <li>Arrastra bloques desde la barra lateral para construir fórmulas.</li>
+      <li>
+        Cada bloque representa un operador lógico:
+        <span class="block-chip neg">¬</span> (negación),
+        <span class="block-chip and">∧</span> (y),
+        <span class="block-chip or">∨</span> (o),
+        <span class="block-chip imp">→</span> (implicación),
+      </li>
+    </ul>
+    <div class="shortcuts-list">
+      <div class="shortcut">
+        <kbd>Ctrl</kbd>+<kbd>1</kbd> <span>Variable</span>
+      </div>
+      <div class="shortcut">
+        <kbd>Ctrl</kbd>+<kbd>2</kbd> <span>Negación (¬)</span>
+      </div>
+      <div class="shortcut">
+        <kbd>Ctrl</kbd>+<kbd>3</kbd> <span>Conjunción (∧)</span>
+      </div>
+      <div class="shortcut">
+        <kbd>Ctrl</kbd>+<kbd>4</kbd> <span>Disyunción (∨)</span>
+      </div>
+      <div class="shortcut">
+        <kbd>Ctrl</kbd>+<kbd>5</kbd> <span>Implicación (→)</span>
+      </div>
+      <div class="shortcut">
+        <kbd>Ctrl</kbd>+<kbd>L</kbd> <span>Limpiar</span>
+      </div>
+      <div class="shortcut">
+        <kbd>Ctrl</kbd>+<kbd>Z</kbd> <span>Deshacer</span>
+      </div>
+      <div class="shortcut">
+        <kbd>Ctrl</kbd>+<kbd>Y</kbd> <span>Rehacer</span>
+      </div>
+      <div class="shortcut">
+        <kbd>Ctrl</kbd>+<kbd>Enter</kbd> <span>Tabla de verdad</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de error de sintaxis -->
+<div class="error-modal" *ngIf="syntaxError" (click)="syntaxError = null">
+  <div class="error-modal-content" (click)="$event.stopPropagation()">
+    <button
+      class="close-btn"
+      (click)="syntaxError = null"
+      aria-label="Cerrar error"
+    >
+      &times;
+    </button>
+    <h2>Error de sintaxis</h2>
+    <p>{{ syntaxError }}</p>
+  </div>
+</div>

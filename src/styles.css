@@ -1,0 +1,55 @@
+/* :root {
+  --primary: #3f51b5;
+  --primary-dark: #303f9f;
+  --primary-light: #c5cae9;
+  --error: #c62828;
+  --success: #2e7d32;
+  --success-bg: #e8f5e9;
+  --false-bg: #fbe9e7;
+  --false: #c62828;
+  --modal-bg: rgba(33,33,33,0.35);
+  --modal-help-bg: #e7f4ff;
+  --modal-error-bg: #fff3f3;
+  --modal-border: #c62828;
+  --chip-bg: #e0e0e0;
+  --chip-radius: 16px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-modal: 0 4px 24px rgba(0,0,0,0.18);
+  font-family: 'Roboto', sans-serif;
+} */
+/* .main-header { display: flex; align-items: center; gap: 2rem; background: #3f51b5; color: #fff; padding: 1rem 2rem; }
+.tabs { display: flex; gap: 1rem; }
+.tabs button { background: none; border: none; color: #fff; font-size: 1rem; padding: 0.5rem 1.2rem; cursor: pointer; border-bottom: 2px solid transparent; }
+.tabs button.active { border-bottom: 2px solid #ffeb3b; background: #283593; }
+.tab-content { padding: 2rem; } */
+
+:root {
+  --primary: #213555;
+  --secondary: #3E5879;
+  --surface: #D8C4B6;
+  --background: #F5EFE7;
+  --text: #000;
+  font-family: 'Roboto', Arial, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+  font-family: 'Roboto', Arial, sans-serif;
+}
+
+:root {
+  --error: #c62828;
+  --success: #2e7d32;
+  --success-bg: #e8f5e9;
+  --false-bg: #fbe9e7;
+  --false: #c62828;
+  --modal-bg: rgba(33, 33, 33, 0.35);
+  --modal-help-bg: #e7f4ff;
+  --modal-error-bg: #fff3f3;
+  --modal-border: #c62828;
+  --chip-bg: #e0e0e0;
+  --chip-radius: 16px;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-modal: 0 4px 24px rgba(0, 0, 0, 0.18)
+}

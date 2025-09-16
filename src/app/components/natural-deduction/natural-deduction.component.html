@@ -1,0 +1,426 @@
+<div class="natural-deduction-container">
+  <div class="exercise-panel" *ngIf="isExerciseMode && currentExercise">
+    <div class="exercise-info">
+      <h3>{{ currentExercise.title }}</h3>
+      <p><strong>Objetivo:</strong> {{ currentExercise.objective }}</p>
+    </div>
+    <div class="exercise-actions">
+      <button class="hint-btn" (click)="showInstructionsModal()" *ngIf="currentExercise.instructions">
+        📋 Pasos
+      </button>
+      <button class="hint-btn" (click)="showHintModal()" *ngIf="currentExercise.hint">
+        💡 Pista
+      </button>
+      <button class="back-btn" (click)="goBackToExercises()">
+        ← Volver a ejercicios
+      </button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <!-- Sección principal (75%) -->
+    <div class="main-section">
+      <!-- Área de objetivo -->
+      <div class="goal-section">
+        <div class="goal-input-row" [class.goal-achieved-bg]="goalAchieved">
+          <!-- <label for="goal-input"><strong>Objetivo a alcanzar:</strong></label> -->
+
+          <!-- Input con botón igual que en entrada de fórmula -->
+          <div class="goal-input-group">
+            <input
+              id="goal-input"
+              type="text"
+              [(ngModel)]="goalFormula"
+              (blur)="validateGoalFormula()"
+              (keyup.enter)="validateGoalFormula()"
+              class="goal-input"
+              placeholder="Introduce la fórmula objetivo (ej: p -> q, not p)..."
+              [readonly]="goalAchieved"
+              [class.error]="goalFormulaError"
+            />
+
+            <!-- MISMO botón que en entrada de fórmula -->
+            <button
+              [disabled]="!blocklyFormulaService.getFormula() || goalAchieved"
+              type="button"
+              class="action-button"
+              (click)="useBlocklyFormulaAsGoal()"
+            >
+              Usar fórmula de Blockly
+            </button>
+          </div>
+
+          <div *ngIf="goalFormulaError" class="error-message">
+            {{ goalFormulaError }}
+          </div>
+          <div *ngIf="goalAchieved" class="goal-achieved-msg">
+            ¡Objetivo alcanzado! La deducción es válida.
+          </div>
+        </div>
+      </div>
+
+      <!-- Área de derivación (tabla/pizarra) -->
+      <div class="derivation-board">
+        <div class="derivation-header">
+          <h3>Derivación</h3>
+          <button (click)="resetDerivation()" class="action-button reset">
+            Reiniciar
+          </button>
+        </div>
+
+        <div class="derivation-lines">
+          <table class="derivation-table" id="derivation-table">
+            <thead>
+              <tr>
+                <th>Línea</th>
+                <th>Fórmula</th>
+                <th>Regla</th>
+                <th>Referencias</th>
+                <th class="no-export">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <ng-container *ngIf="lines.length === 0">
+                <tr>
+                  <td colspan="5" class="empty-message">
+                    La derivación está vacía. Añade premisas o supuestos para
+                    comenzar.
+                  </td>
+                </tr>
+              </ng-container>
+              <ng-container *ngFor="let line of lines">
+                <tr
+                  [ngClass]="{
+                    selected: isLineSelected(line.number),
+                    assumption: line.type === LineType.ASSUMPTION,
+                    discharged: line.isDischargedAssumption
+                  }"
+                  [class.closed-subproof]="isClosedLine(line)"
+                >
+                  <td>{{ line.number }}</td>
+                  <td
+                    [ngStyle]="getIndentationStyle(line)"
+                    class="formula-cell"
+                  >
+                    {{ line.formula }}
+                  </td>
+                  <td>
+                    <ng-container *ngIf="line.type === LineType.PREMISE">
+                      <span class="rule-badge premise">Premisa</span>
+                    </ng-container>
+                    <ng-container *ngIf="line.type === LineType.ASSUMPTION">
+                      <span class="rule-badge assumption">Supuesto</span>
+                    </ng-container>
+                    <ng-container
+                      *ngIf="line.type === LineType.DERIVED && line.rule"
+                    >
+                      <span class="rule-badge derived">{{ line.rule }}</span>
+                    </ng-container>
+                  </td>
+                  <td>
+                    <ng-container
+                      *ngIf="
+                        line.referencedLines && line.referencedLines.length > 0
+                      "
+                    >
+                      {{ line.referencedLines.join(", ") }}
+                    </ng-container>
+                  </td>
+                  <td class="no-export">
+                    <button
+                      *ngIf="!isClosedLine(line)"
+                      (click)="toggleLineSelection(line.number)"
+                      class="select-button"
+                      [class.active]="isLineSelected(line.number)"
+                    >
+                      {{
+                        isLineSelected(line.number)
+                          ? "Deseleccionar"
+                          : "Seleccionar"
+                      }}
+                    </button>
+                  </td>
+                </tr>
+              </ng-container>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Área de entrada de fórmula (parte inferior) -->
+      <div class="formula-input-section">
+        <!-- <h3>Entrada de fórmula</h3> -->
+        <div class="input-tabs">
+          <button
+            [class.active]="inputMode === 'premisa'"
+            (click)="inputMode = 'premisa'"
+          >
+            Premisa
+          </button>
+          <button
+            [class.active]="inputMode === 'supuesto'"
+            (click)="inputMode = 'supuesto'"
+          >
+            Supuesto
+          </button>
+          <button
+            [class.active]="inputMode === 'regla'"
+            (click)="inputMode = 'regla'"
+          >
+            Aplicar Regla
+          </button>
+        </div>
+
+        <div class="input-group">
+          <input
+            type="text"
+            [(ngModel)]="inputFormula"
+            placeholder="Introduce la fórmula lógica..."
+            class="formula-input"
+          />
+
+          <!-- Conectores lógicos -->
+          <div class="logic-connectives-inline">
+            <span (click)="insertSymbolInFormula('¬')" title="Negación">¬</span>
+            <span (click)="insertSymbolInFormula('∧')" title="Conjunción">∧</span>
+            <span (click)="insertSymbolInFormula('∨')" title="Disyunción">∨</span>
+            <span (click)="insertSymbolInFormula('→')" title="Implicación">→</span>
+          </div>
+
+          <button
+            [disabled]="!blocklyFormulaService.getFormula()"
+            type="button"
+            class="action-button"
+            (click)="useBlocklyFormula()"
+          >
+            Usar fórmula de Blockly
+          </button>
+
+          <!-- Solo muestra el selector de regla si está en modo regla -->
+          <ng-container *ngIf="inputMode === 'regla'">
+            <select [(ngModel)]="selectedRule" class="rule-select">
+              <option [ngValue]="null">Seleccione una regla...</option>
+              <option *ngFor="let rule of rules" [ngValue]="rule">
+                {{ getRuleDescription(rule) }}
+              </option>
+            </select>
+          </ng-container>
+
+          <button class="action-button" (click)="addLine()">Añadir</button>
+        </div>
+
+        <!-- Selector de líneas solo si es regla -->
+        <div
+          *ngIf="inputMode === 'regla' && lines.length > 0"
+          class="selected-lines"
+        >
+          <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <h4 style="margin: 0; flex-shrink: 0;">Líneas:</h4>
+            
+            <div class="tag-list" *ngIf="selectedLines.length > 0" style="flex: 1;">
+              <span *ngFor="let lineNum of selectedLines" class="line-tag">
+                {{ lineNum }}
+                <button class="remove-tag" (click)="toggleLineSelection(lineNum)">
+                  ×
+                </button>
+              </span>
+            </div>
+            
+            <div class="no-selections" *ngIf="selectedLines.length === 0" style="flex: 1;">
+              <small>No hay líneas seleccionadas.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección lateral (25%) -->
+    <div class="sidebar-section">
+      <!-- Sugerencias - Siempre visible -->
+      <div class="control-section">
+        <h3>Sugerencias</h3>
+        <div class="suggestion-list" *ngIf="suggestions.length > 0">
+          <div *ngFor="let suggestion of suggestions" class="suggestion-item">
+            <div class="suggestion-content">
+              <div class="suggestion-title">{{ suggestion.description }}</div>
+              <div class="suggestion-lines">
+                Líneas: {{ suggestion.lines.join(", ") }}
+              </div>
+            </div>
+            <button
+              (click)="applySuggestion(suggestion)"
+              class="suggestion-button"
+            >
+              Usar
+            </button>
+          </div>
+        </div>
+        <!-- Mensaje cuando no hay sugerencias -->
+        <div class="no-suggestions" *ngIf="suggestions.length === 0">
+          <p>No hay sugerencias disponibles.</p>
+          <small
+            >Las sugerencias aparecerán automáticamente según tu
+            derivación.</small
+          >
+        </div>
+      </div>
+
+      <!-- Botones auxiliares -->
+      <div class="control-section">
+        <h3>Acciones</h3>
+        <div class="action-buttons">
+          <button (click)="undo()" class="action-button">Deshacer</button>
+          <button (click)="redo()" class="action-button">Rehacer</button>
+          <button (click)="exportToPDF()" class="action-button">
+            Exportar a PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de error -->
+  <div class="error-modal" *ngIf="errorMessage" (click)="errorMessage = ''">
+    <div class="error-modal-content" (click)="$event.stopPropagation()">
+      <button
+        class="close-btn"
+        (click)="errorMessage = ''"
+        aria-label="Cerrar error"
+      >
+        &times;
+      </button>
+      <h2>Error de sintaxis</h2>
+      <p>{{ errorMessage }}</p>
+      <ul *ngIf="errorHelpList.length > 0">
+        <li *ngFor="let help of errorHelpList">{{ help }}</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Botón de ayuda flotante -->
+  <div
+    class="help-fab"
+    tabindex="0"
+    aria-label="Ayuda"
+    (click)="showHelp = true"
+    (keydown.enter)="showHelp = true"
+  >
+    <span>❔</span>
+  </div>
+
+  <!-- Modal de ayuda -->
+  <div
+    class="help-modal"
+    *ngIf="showHelp"
+    (click)="showHelp = false"
+    tabindex="0"
+    role="dialog"
+    aria-modal="true"
+    (keyup.enter)="showHelp = false"
+    (keydown.enter)="showHelp = false"
+  >
+    <div
+      class="help-modal-content"
+      (click)="$event.stopPropagation()"
+      tabindex="0"
+      role="document"
+      (keyup.enter)="showHelp = false"
+      (keydown.enter)="showHelp = false"
+    >
+      <button
+        class="close-btn"
+        (click)="showHelp = false"
+        (keyup.enter)="showHelp = false"
+        (keydown.enter)="showHelp = false"
+        aria-label="Cerrar ayuda"
+        tabindex="0"
+      >
+        &times;
+      </button>
+      <h2>Guía de uso: Deducción Natural</h2>
+      <ol>
+        <li>Añade premisas usando el formulario superior.</li>
+        <li>
+          Si necesitas hacer un supuesto provisional, utiliza el formulario
+          correspondiente.
+        </li>
+        <li>
+          Para aplicar una regla:
+          <ul>
+            <li>Selecciona las líneas a las que quieres aplicar la regla.</li>
+            <li>Elige la regla que deseas aplicar.</li>
+            <li>Ingresa la fórmula resultante.</li>
+            <li>Haz clic en "Aplicar".</li>
+          </ul>
+        </li>
+        <li>
+          Para utilizar el Teorema de Deducción (TD) o la prueba por casos,
+          selecciona las líneas correspondientes (incluyendo el supuesto que
+          deseas descargar).
+        </li>
+      </ol>
+      <p>Las reglas disponibles incluyen:</p>
+      <ul>
+        <li>
+          <strong>MP (Modus Ponens):</strong>
+          Si tienes <span [innerHTML]="'A \\to B' | katex"></span> y
+          <span [innerHTML]="'A' | katex"></span>, puedes derivar
+          <span [innerHTML]="'B' | katex"></span>.
+        </li>
+        <li>
+          <strong>TD (Teorema de Deducción):</strong>
+          Si a partir de un supuesto
+          <span [innerHTML]="'A' | katex"></span> derivas
+          <span [innerHTML]="'B' | katex"></span>, puedes concluir
+          <span [innerHTML]="'A \\to B' | katex"></span>.
+        </li>
+        <li>
+          <strong>IC (Introducción de Conjunción):</strong>
+          Si tienes <span [innerHTML]="'A' | katex"></span> y
+          <span [innerHTML]="'B' | katex"></span>, puedes derivar
+          <span [innerHTML]="'A \\land B' | katex"></span>.
+        </li>
+        <li>
+          <strong>EC1 (Eliminación de Conjunción 1):</strong>
+          Si tienes <span [innerHTML]="'A \\land B' | katex"></span>, puedes
+          derivar <span [innerHTML]="'A' | katex"></span>.
+        </li>
+        <li>
+          <strong>EC2 (Eliminación de Conjunción 2):</strong>
+          Si tienes <span [innerHTML]="'A \\land B' | katex"></span>, puedes
+          derivar <span [innerHTML]="'B' | katex"></span>.
+        </li>
+        <li>
+          <strong>ID1 (Introducción de Disyunción 1):</strong>
+          Si tienes <span [innerHTML]="'A' | katex"></span>, puedes derivar
+          <span [innerHTML]="'A \\lor B' | katex"></span>.
+        </li>
+        <li>
+          <strong>ID2 (Introducción de Disyunción 2):</strong>
+          Si tienes <span [innerHTML]="'B' | katex"></span>, puedes derivar
+          <span [innerHTML]="'A \\lor B' | katex"></span>.
+        </li>
+        <li>
+          <strong>CASES (Prueba por Casos):</strong>
+          Si tienes <span [innerHTML]="'A \\lor B' | katex"></span>, y de
+          <span [innerHTML]="'A' | katex"></span> se sigue
+          <span [innerHTML]="'C' | katex"></span> y de
+          <span [innerHTML]="'B' | katex"></span> se sigue
+          <span [innerHTML]="'C' | katex"></span>, puedes derivar
+          <span [innerHTML]="'C' | katex"></span>.
+        </li>
+        <li>
+          <strong>IN (Introducción de Negación):</strong>
+          Si suponiendo <span [innerHTML]="'A' | katex"></span> llegas a una
+          contradicción, puedes derivar
+          <span [innerHTML]="'\\neg A' | katex"></span>.
+        </li>
+        <li>
+          <strong>EN (Eliminación de Negación):</strong>
+          Si tienes <span [innerHTML]="'\\neg\\neg A' | katex"></span>, puedes
+          derivar <span [innerHTML]="'A' | katex"></span>.
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

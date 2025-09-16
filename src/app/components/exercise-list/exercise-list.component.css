@@ -1,0 +1,149 @@
+.mode-selection-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 98vh;
+  background: var(--background);
+  padding: 2rem;
+}
+
+.mode-title {
+  font-size: 2.5rem;
+  color: #000;
+  margin-bottom: 2.5rem;
+}
+
+.mode-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 600px;
+  width: 100%;
+}
+
+.mode-btn {
+  background: var(--primary);
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  padding: 2rem 3rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 220px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(33,53,85,0.08);
+  text-align: center;
+}
+
+.mode-btn:hover {
+  background: var(--secondary);
+  transform: translateY(-2px);
+}
+
+.mode-btn.completed {
+  background: #28a745;
+  border-left: 4px solid #1e7e34;
+}
+
+.mode-btn.completed:hover {
+  background: #218838;
+}
+
+.icon {
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.mode-desc {
+  font-size: 1rem;
+  color: #D8C4B6;
+  margin-top: 0.7rem;
+  line-height: 1.4;
+}
+
+.exercise-objective {
+  font-size: 0.9rem;
+  color: #F5F5F5;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  border-left: 3px solid #FFF;
+}
+
+.exercise-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.exercise-type {
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Diferentes colores para tipos de ejercicios */
+.mode-btn.interface-type {
+  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+}
+
+.mode-btn.interface-type:hover {
+  background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
+}
+
+.mode-btn.deduction-type {
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+}
+
+.mode-btn.deduction-type:hover {
+  background: linear-gradient(135deg, #F57C00 0%, #EF6C00 100%);
+}
+
+.back-container {
+  margin-top: 2rem;
+}
+
+.back-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+  background: #545b62;
+  transform: translateY(-1px);
+}
+
+/* Responsive para pantallas pequeñas */
+@media (max-width: 768px) {
+  .mode-buttons {
+    gap: 1rem;
+  }
+  
+  .mode-btn {
+    padding: 1.5rem 2rem;
+    font-size: 1.1rem;
+  }
+  
+  .mode-title {
+    font-size: 2rem;
+  }
+}

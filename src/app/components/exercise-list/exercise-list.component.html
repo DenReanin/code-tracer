@@ -1,0 +1,31 @@
+<div class="mode-selection-container">
+  <h2 class="mode-title">Ejercicios de Lógica Proposicional</h2>
+  <div class="mode-buttons">
+    <button 
+      *ngFor="let exercise of exercises" 
+      class="mode-btn"
+      [class.completed]="exercise.completed"
+      [class.interface-type]="exercise.type === 'interface'"
+      [class.deduction-type]="exercise.type === 'deduction'"
+      (click)="startExercise(exercise)"
+    >
+      <span class="icon">
+        {{ exercise.completed ? '✅' : getExerciseIcon(exercise) }}
+      </span>
+      <div class="exercise-header">
+        {{ exercise.title }}
+        <span class="exercise-type">{{ getTypeDescription(exercise.type) }}</span>
+      </div>
+      <div class="mode-desc">{{ exercise.description }}</div>
+      <div class="exercise-objective">
+        <strong>Objetivo:</strong> {{ exercise.objective }}
+      </div>
+    </button>
+  </div>
+  
+  <div class="back-container">
+    <button class="back-btn" (click)="goBack()">
+      ← Volver al menú principal
+    </button>
+  </div>
+</div>
