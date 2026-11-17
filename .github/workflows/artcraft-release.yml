@@ -1,0 +1,39 @@
+name: ArtCraft Release (Code Tracer)
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Instalar dependencias y compilar Angular
+        run: |
+          npm ci
+          npm run build
+
+      - name: Empaquetar build listo para ArtCraft Hub
+        run: |
+          tar -czf code-tracer-linux-x86_64.tar.gz \
+            dist package.json serve-code-tracer.mjs run-code-tracer.sh artcraft.tool.json
+          sha256sum code-tracer-linux-x86_64.tar.gz > code-tracer-linux-x86_64.tar.gz.sha256
+
+      - name: Publicar GitHub Release automática desde main
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v1.0.${{ github.run_number }}"
+          name: "Code Tracer v1.0.${{ github.run_number }} (${{ github.sha }})"
+          generate_release_notes: true
+          files: |
+            code-tracer-linux-x86_64.tar.gz
+            code-tracer-linux-x86_64.tar.gz.sha256

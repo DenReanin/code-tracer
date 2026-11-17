@@ -1,0 +1,23 @@
+{
+  "id": "code-tracer",
+  "name": "Code Tracer",
+  "abbr": "CT",
+  "tagline": "Plataforma educativa interactiva de lógica proposicional, árboles sintácticos y deducción natural (Angular 19)",
+  "category": "Educación & Lógica",
+  "brandColor": "#F59E0B",
+  "icon": "code",
+  "repo": "DenReanin/code-tracer",
+  "branch": "main",
+  "private": false,
+  "updateStrategy": {
+    "mode": "branch-tarball",
+    "postInstall": "bash ./run-code-tracer.sh --setup-only",
+    "requireMainCheckSuccess": false
+  },
+  "launch": {
+    "executable": "run-code-tracer.sh",
+    "args": [],
+    "workingDir": "bin",
+    "runInTerminal": false
+  }
+}
